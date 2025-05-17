@@ -6,7 +6,7 @@ permalink: /notes/fa24-phys213
 venue: "University of Illinois Urbana-Champaign"
 date: 2024-08-01
 location: "Urbana, IL, USA"
-notesurl: "https://yasmercy.github.io/files/sp24-phys213-main.pdf"
+notesurl: "https://yasmercy.github.io/files/fa24-phys213-main.pdf"
 ---
 
 Introduction to thermodynamics...
