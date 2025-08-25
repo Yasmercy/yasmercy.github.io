@@ -9,7 +9,7 @@ redirect_from:
 
 # Bio
 
-Hey, I'm Ian Chen, studying Statistics and Computer science as a second-year undergraduate at the University of Illinois-Urbana Champaign.
+Hey, I'm Ian Chen, studying Statistics and Computer science as a third-year undergraduate at the University of Illinois-Urbana Champaign.
 
 # Research
 
