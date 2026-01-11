@@ -11,4 +11,4 @@ bibtexurl: 'http://yasmercy.github.io/files/sbm_wcc.bib'
 citation: 'Vu-Le, The-Anh and Park, Minhyuk and Chen, Ian and Chacko, George and Warnow, Tandy. (2025). &quot;Using Stochastic Block Models for Community Detection: The issue of edge-connectivity&quot'
 ---
 
-[arxiv](https://arxiv.org/abs/2508.03843)
+https://doi.org/10.1007/s41109-025-00747-2
