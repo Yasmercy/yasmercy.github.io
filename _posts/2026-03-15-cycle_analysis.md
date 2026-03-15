@@ -140,7 +140,7 @@ We can compute this by enumerating all (possibly countable infinite) cycles, com
 
 I illustrate this by example.
 Consider the following two state Markov chain with states $$T$$ and $$H$$.
-Let $$P(T, H) = p$$, $$T(H, T) = q$$, and self loops $$1-p$$ and $$1-q$$ respectively.
+Let $$P(T, H) = p$$, $$P(H, T) = q$$, and self loops $$1-p$$ and $$1-q$$ respectively.
 <div style="text-align: center;">
   <img src="/files/posts/03-15-cycle_analysis/fsm3.svg" alt="Bernoulli Markov Chain" />
 </div>
@@ -220,12 +220,13 @@ $$
 \text{average points} = \frac{ \text{average points in } C_x }{ \text{average length of } C_x }
 $$
 
-Now, we have the cycles $$T$$ with probability $$1/2$$, as well as $$HT$$ and $$HH$$ with probability $$1/4$$.
-Thus, the average cycle length is $$1/2 + 2/4 + 2/4 = 3/2$$ and the average points per cycle is $$1/4$$.
+Now, we have the cycles $$T$$, $$HT$$, and $$HH$$ with probabilities $$1-p$$, $$p(1-p)$$, and $$p^2$$ respectively.
+The average cycle length is $$1 \cdot (1-p) + 2 \cdot p(1-p) + 2 \cdot p^2 = 1 + p$$.
+The average points per cycle is $$0 \cdot (1-p) + 0 \cdot p(1-p) + 1 \cdot p^2 = p^2$$.
 Finally,
 
 $$
-\text{average points} = \frac{1/4}{3/2} = \frac{1}{6}
+\text{average points} = \frac{p^2}{1+p}
 $$
 
 Indeed this is the same solution as via mutual recursion!
@@ -248,6 +249,8 @@ $$
 
 where $$\sum_{m=0}^\infty A^m = (1-A)^{-1}$$ by Geometric series formula.
 $$(1-Q)^{-1}$$ is called the fundamental matrix.
+
+Apparently, this is a special case of a renewal-reward process.
 
 ## Acknowledgements
 
