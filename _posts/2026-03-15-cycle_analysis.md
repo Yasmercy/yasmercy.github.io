@@ -6,14 +6,12 @@ tags:
   - stochastic-processes
 ---
 
-# Puzzle
-
 Consider an infinitely long sequence of coin flips, i.e. with $$p$$ probability heads and $$1-p$$ probability tails.
 You get points for non-overlapping pairs of consecutive heads.
-For example, the sequence $$HHTHHH$$ gets $$2$$ points.
-
 How many points do you expect to obtain per flip?
 That is, what is the limit for the ratio of the number of points over number of flips?
+
+For example, the sequence $$HHTHHH$$ gets $$2$$ points.
 
 # Solution via Mutual Recursion
 
