@@ -12,6 +12,13 @@ How many points do you expect to obtain per flip?
 That is, what is the limit for the ratio of the number of points over number of flips?
 
 For example, the sequence $$HHTHHH$$ gets $$2$$ points.
+With $$6$$ flips, the average score is $$1/3$$.
+
+From a quick simulation with $$p=1/2$$, (flips on the $$x$$-axis, on a square-root scale), it seems like the ratio converges to $$1/6$$.
+Let us show that analytically.
+<div style="text-align: center;">
+  <img src="/files/posts/03-15-cycle_analysis/points_timeline.jpg"/>
+</div>
 
 # Solution via Mutual Recursion
 
