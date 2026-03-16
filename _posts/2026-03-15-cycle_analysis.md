@@ -1,7 +1,7 @@
 ---
 title: 'Cycle Analysis'
 date: 2026-03-15
-permalink: /posts/2026/01/mb
+permalink: /posts/2026/03/cycle
 tags:
   - stochastic-processes
 ---
