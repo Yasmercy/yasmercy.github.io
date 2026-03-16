@@ -14,7 +14,7 @@ That is, what is the limit for the ratio of the number of points over number of 
 For example, the sequence $$HHTHHH$$ gets $$2$$ points.
 With $$6$$ flips, the average score is $$1/3$$.
 
-From a quick simulation with $$p=1/2$$, (flips on the $$x$$-axis, on a square-root scale), it seems like the ratio converges to $$1/6$$.
+From a quick [simulation](/files/posts/03-15-cycle_analysis/consecutive_heads.R) with $$p=1/2$$, (flips on the $$x$$-axis, on a square-root scale), it seems like the ratio converges to $$1/6$$.
 Let us show that analytically.
 <div style="text-align: center;">
   <img src="/files/posts/03-15-cycle_analysis/points_timeline.jpg"/>
@@ -162,28 +162,28 @@ $$
 m_T & = p(e_4) \cdot 1 + p(e_1 e_3) \cdot 2 + p(e_1 e_2 e_3) \cdot 3 + p(e_1 e_2 e_2 e_3) \cdot 4 + \ldots \\
     & = (1-p) + \sum_{\ell=0}^\infty (\ell + 2) pq (1-q)^\ell \\
     & = (1-p) + 2pq + p(1-q) \sum_{\ell = 0}^\infty (\ell + 2) q(1-q)^{\ell - 1} \\
-    & = (1-p) + 2pq + p(1-q) (2 + 1/q) = \frac{p + q}{p}
+    & = (1-p) + 2pq + p(1-q) (2 + 1/q) = \frac{p + q}{q}
 \end{aligned}
 $$
 
 Thus, $$\pi_T = \frac{p}{p+q}$$.
 
 We can now find $$\pi_H$$ in one of several ways.
-First, $$\pi_H + \pi_T = 1$$, so that $$\pi_H = \frac{q}{p+q}$$.
+First, $$\pi_H + \pi_T = 1$$, so that $$\pi_H = \frac{p}{p+q}$$.
 
-Alternatively, we can note that $$\pi_H / \pi_T$$ is the averaged number of times we visit $$H$$ in tn the above cycles.
+Alternatively, we can note that $$\pi_H / \pi_T$$ is the averaged number of times we visit $$H$$ in the above cycles.
 That is,
 
 $$
 \begin{aligned}
-\frac{m_H}{m_T} & = p(e_4) \cdot 0 + p(e_1 e_3) \cdot 1 + p(e_1 e_2 e_3) \cdot 2 + \ldots \\
+\frac{\pi_H}{\pi_T} & = p(e_4) \cdot 0 + p(e_1 e_3) \cdot 1 + p(e_1 e_2 e_3) \cdot 2 + \ldots \\
                 & = \sum_{\ell=0}^\infty (\ell + 1) pq (1-q)^\ell \\
                 & = pq + p(1-q) \sum_{\ell = 0}^\infty (\ell + 1) q(1-q)^{\ell - 1} \\
                 & = pq + p(1-q) (1 + 1/q) = \frac{p}{q} 
 \end{aligned}
 $$
 
-so that indeed, $$m_H = \frac{p}{q} \frac{q}{p+q} = \frac{p}{p+q}$$.
+so that indeed, $$\pi_H = \frac{p}{q} \frac{q}{p+q} = \frac{p}{p+q}$$.
 
 We can summarize this procedure into the following theorem:
 
