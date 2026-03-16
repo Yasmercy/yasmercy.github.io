@@ -6,7 +6,7 @@ permalink: /talks/2024-11-18-ackermann
 venue: "SIGma (UIUC Special Interest Group in Math and Algorithms)"
 date: 2024-11-18
 location: "Urbana, IL, USA"
-slidesurl: "/files/2024-11-18-ackermann.pdf"
+slidesurl: "/files/talks/2024-11-18-ackermann.pdf"
 citation: "Chen, Ian; Inverse Ackermann Function"
 ---
 

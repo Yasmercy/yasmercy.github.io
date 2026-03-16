@@ -6,7 +6,7 @@ permalink: /talks/2026-02-23-dynamic-conn
 venue: "SIGma (UIUC Special Interest Group in Math and Algorithms)"
 date: 2026-02-23
 location: "Urbana, IL, USA"
-slidesurl: "/files/2026-02-23-dynamic-conn.pdf"
+slidesurl: "/files/talks/2026-02-23-dynamic-conn.pdf"
 citation: "Chen, Ian; Dynamic Graph Connectivity"
 ---
 
