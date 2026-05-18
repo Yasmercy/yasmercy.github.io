@@ -1,5 +1,5 @@
 ---
-title: "MATH 427"
+title: "MATH 427: Abstract Algebra"
 collection: notes
 type: "Undergraduate course"
 permalink: /notes/sp25-math427-groups
@@ -8,7 +8,7 @@ date: 2025-01-20
 location: "Urbana, IL, USA"
 ---
 
-Notes for honors abstract algebra at UIUC, taught by Eugene Lerman.
+Notes for the Spring 2025 instance of honors abstract algebra at UIUC, taught by Eugene Lerman.
 
 {% raw %}
 <head>

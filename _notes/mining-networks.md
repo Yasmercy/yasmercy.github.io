@@ -9,4 +9,4 @@ location: "Urbana, IL, USA"
 notesurl: "https://yasmercy.github.io/files/graph-mining.pdf"
 ---
 
-These notes very briefly summarize Chapters 2, 3, 5, 6 from KLaminski, Pralat, and Theberge's book on Mining Complex Networks.
+These notes very briefly summarize Chapters 2, 3, 5, 6 from Klaminski, Pralat, and Theberge's book on Mining Complex Networks.
