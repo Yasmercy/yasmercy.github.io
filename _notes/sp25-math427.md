@@ -8,6 +8,8 @@ date: 2025-01-20
 location: "Urbana, IL, USA"
 ---
 
+Notes for honors abstract algebra at UIUC, taught by Eugene Lerman.
+
 {% raw %}
 <head>
 <link rel="stylesheet" href="/assets/css/LaTeXML.css" type="text/css">
@@ -18,12 +20,6 @@ location: "Urbana, IL, USA"
 <div class="ltx_page_main">
 <div class="ltx_page_content">
 <article class="ltx_document ltx_authors_1line">
-<h1 class="ltx_title ltx_title_document">MATH 427 Notes</h1>
-<div class="ltx_authors">
-<span class="ltx_creator ltx_role_author">
-<span class="ltx_personname">Ian Chen
-</span></span>
-</div>
 
 <nav class="ltx_TOC ltx_list_toc ltx_toc_toc"><h6 class="ltx_title ltx_title_contents">Contents</h6>
 <ol class="ltx_toclist">

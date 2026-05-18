@@ -1,0 +1,679 @@
+\documentclass{article}
+
+\title{Mining Complex Networks Notes}
+\author{Ian Chen}
+\date{\today}
+
+\usepackage{prelude}
+\usepackage[backend=biber,style=authoryear,defernumbers=true]{biblatex}
+\addbibresource{refs.bib}
+
+\newcommand{\ER}{\mathcal{G}}
+\newcommand{\mean}[1]{\langle #1 \rangle}
+\newcommand{\dint}{\deg^{\text{int}}}
+\newcommand{\dext}{\deg^{\text{ext}}}
+\newcommand{\vol}{\text{Vol}}
+
+\begin{document}
+\maketitle
+
+\part{Main Material}
+
+These notes very briefly summarize\footnotemark Chapters $2, 3, 5, 6$ from \textcite{mining-complex-networks}, focusing on data analysis of simple graphs.
+As much of the material is review, these notes mostly provide an overview and the reader should see the original text for the specific details.
+\footnotetext{Scattered throughout the notes are additional material that I found helpful.}
+
+\section{Random Graphs}
+
+The authors motivate the study of random graphs for the following applications:
+\begin{itemize}
+    \item As a set of conceptual and mathematical examples, with well understood properties.
+    \item As models for empirical (real, complex) networks.
+    \item As procedures to create synthetic networks, often for testing and benchmarking algorithms.
+\end{itemize}
+
+\subsection{ER graphs}
+
+The Erd\"os-Renyi graph $\ER(n, p)$ has vertex set $V = \arange{n}$, with edges sampled iid from the support $\binom{V}{2}$ according to $\BernoulliD(p)$.
+It is closely related to the Erd\"os process:
+\begin{enumerate}
+    \item $\ER_0$ has no edges
+    \item $\ER_{t+1}$ adds a single edge to $\ER_t$, uniformly among all non-present edges
+\end{enumerate}
+where $\ER(n, p) = \ER_t$, where $t \sim \BinomialD(\binom{n}{2}, p)$, and hence it is often also called the Binomial graph.
+The asymptotic behavior of ER graphs are incredibly well-understood, and we illustrate it with two examples, developed precisely in Section \ref{sec:er}.
+
+\paragraph{Components and Connectivity:}
+Let $\mean{k} = (n-1)p$ denote the expected average degree of $\ER(n, p)$.
+For $\mean{k} < 1$, then asymptotically almost surely (aas), $\ER(n, p)$ ``looks like'' collections of small trees and uni-cycle components.
+For $\mean{k} > 1$, then aas $\ER(n, p)$ ``looks like'' a single giant component of size $\Omega(n)$.
+Indeed, the intuition for this phase transition is clear: it is the stability threshold of exponential growth!
+
+If we write $p(n) = \frac{\ln n + c}{n}$, then the expected number of isolated nodes is aas $e^{-c}$.
+This is the main barrier to connectivity, as if $p = \omega(\frac{\ln n}{n})$, then aas $\ER(n, p)$ is connected.
+
+\paragraph{Motifs:}
+Let $d(G) = \frac{1}{2} \mean{k} = \frac{\abs{E(G)}}{\abs{V(G)}}$ be the density of a graph, and consider $m(G) = \max_{H \subset G} d(H)$ the maximum subgraph density.
+Then, $G$ will appear as a subgraph aas if and only if the densest subgraph will too, and moreover is $0$ or $1$ based on the thresholded probability $ p^* = n^{-1/m(G)} $.
+Indeed, the intuition is clear for why the densest subgraph $H^*$ is the hardest to reproduce.
+With $O(n^{V(H^*)})$ possible vertex sets where $H^*$ can appear, with $O(p^{E(H^*)})$ probability of this graph appearing, then $p^* = n^{-V(H^*) / E(H^*)}$ is indeed the transition point.
+
+\subsection{Power-Law}
+
+Significant empirical evidence supports that many properties of real-world networks exhibit power-law degree distributions, i.e. according to Zipf distribution with support over $\mathbb{Z}^+$,
+\begin{equation}
+    \label{eq:zipf}
+    D \sim f(d) \propto d^{- \gamma}
+    \qquad
+    \Ev(D^k) \approx \frac{\gamma - 1}{\gamma - 1 - k}, \gamma > (k+1)
+\end{equation}
+
+The ER graph is a poor model for this.
+Indeed, the degree of a vertex follows $\BinomialD(n-1, p)$, and thus as $n \to \infty$, then this degree follows $\PoissonD(\mean{k})$.
+In particular, Poisson has an exponential tail, in contrast to a power-law tail.
+
+The Barab\'asi–Albert (BA) preferential attachment process produces power-law graphs with $\gamma = 3$ (Section \ref{sec:ba}):
+\begin{enumerate}
+    \item $\mathcal{B}_1$ has a single vertex
+    \item $\mathcal{B}_{t+1}$ adds a single vertex to $\mathcal{B}_t$, adding $m$ edges sampled with probability proportional to $\deg_{\mathcal{B}_t}(v)$.
+\end{enumerate}
+Indeed, if we use a \emph{continuum} approximation to the degree distribution, so that for vertex $v_i$,
+$$
+    \pdv{\deg(v_i)}{t} = m \frac{\deg(v_i)}{2mt} \implies \frac{\odif \deg(v_i)}{\deg(v_i)} = \frac{\odif{t}}{2t}
+$$
+and solving it, with the initial condition that $t_0 / t \sim U(0, 1)$, and $\deg(v_i) \big|_{t_0} = m$, then
+$$
+    \deg(v_i) = m \sqrt{\frac{t}{t_0}},
+    \qquad
+    \pdv{}{k} \Pr{\deg(v_i) \le k} = \pdv{}{k} \Pr{ \frac{t_0}{t} \ge \frac{m^2}{k^2} } = \pdv{}{k} \ab( 1 - \frac{m^2}{k^2} ) = 2m^2 k^{-3}
+$$
+
+\subsection{Chung-Lu and Configuration}
+
+Another approach for better realism in our network models is to specifically enforce the degree distribution.
+For a given degree sequence $\vb{d}$\footnotemark, we consider the uniform distribution over all graphs with $\vb{d}$ as its sequence.
+\footnotetext{Not all degree sequences are realizable.
+    The Havel-Hakimi theorem is illustrative, asserting handshaking and pigeonhole are sufficient and necessary.
+    In practice, the Erd\"os-Gallai formula is efficient.}
+
+A more theoretically pleasing model is to enforce degrees only in expectation, i.e. attaching edges independently:
+\begin{equation}
+    \label{eq:chung-lu}
+    p_{ij} =
+    \begin{cases}
+        \frac{d_i d_j}{w} & i \ne j \\
+        \frac{d_i^2}{2w}  & i = j
+    \end{cases}
+    \qquad
+    w = \vb{1}^T \vb{d}
+\end{equation}
+where we allow self-loops (which contribute 2 to the degree).
+
+These models nicely allow us to generate many other graphs by correctly specifying the degree distribution:
+\begin{itemize}
+    \item The power law graphs, where the coefficient is typically fit to a training set of data
+    \item Random $d$-regular graphs, which is aas connected for $d \ge 3$, aas disconnected for $d < 3$
+\end{itemize}
+and also serve nicely as a \emph{null model} to normalize several measures discussed later (Sections \ref{sec:modularity, sec:benchmarks}).
+
+\subsection{Quick checks}
+
+\paragraph{Checks}
+
+\begin{enumerate}
+    \item For what $p$ would $\ER(n, p)$ be the uniform distribution over all graphs on $V = \arange{n}$?
+    \item Let $X$ be the number of occurrences of a subgraph $H$ in $\ER(n, p)$, easy to calculate using linearity of expectation.
+          If $\Ev(X) \to \infty$, does this imply $H$ is a motif aas?
+    \item Approximate the Zipf distribution over $\R^{\ge 1}$ by $f(d) \propto d^{- \gamma}$.
+          Verify the approximate moments in Equation \ref{eq:zipf}.
+    \item Verify the expected degree in the Chung-Lu model (Equation \ref{eq:chung-lu}).
+    \item How might one generate a graph according to the configuration model?
+\end{enumerate}
+
+\paragraph{Solutions}
+
+\begin{enumerate}
+    \item $p = 1/2$, where indeed each graph has probability $2^{-n}$ of being generated
+    \item No. Even if the probability tends to $0$, the number of occurrences conditioned on existence may tend to infinity.
+          \begin{minipage}{0.7\textwidth}
+              Consider $H$ to the right, on $\ER(n, p = n^{-9/11})$, and $X$ number of occurrences in $\ER(n, p)$.
+              The maximum subgraph density is $5/4$, and $p = n^{-9/11}$ is below threshold $n^{-4/5}$, so $\Pr{X = 0} \toP 1$.
+              However, we may find $\Ev(X)$ explicitly:
+              $$
+                  \Ev(X) = \frac{1}{\mathbf{aut}(H)} \sum_{v_1,\ldots,v_5 \in V} 1_{H \subset G[v_1, \ldots, v_5]} = \binom{n}{5} \frac{5!}{2} p^6 = \Theta(n^{1/11}) \to \infty
+              $$
+          \end{minipage}
+          \begin{minipage}{0.25\textwidth}
+              \centering
+              \begin{tikzpicture}[
+                      every node/.style={circle, fill=black, inner sep=0pt, minimum size=5pt}
+                  ]
+                  \node (v1) at (0,1) {};
+                  \node (v2) at (1,0) {};
+                  \node (v3) at (0,-1) {};
+                  \node (v4) at (-1,0) {};
+                  \node (v5) at (2,0.5) {};
+                  \draw (v1) -- (v2);
+                  \draw (v2) -- (v3);
+                  \draw (v3) -- (v4);
+                  \draw (v4) -- (v1);
+                  \draw (v2) -- (v4);
+                  \draw (v2) -- (v5);
+              \end{tikzpicture}
+          \end{minipage}
+    \item First, we find the normalizing factor, $f(d) = cd^{-\gamma}$, with $\gamma > 1$, and moments $\Ev(D^k)$ for $\gamma > k + 1$,
+          $$
+              \int_{1}^\infty cy^{- \gamma} \odif{y} = \frac{c}{\gamma - 1} = 1 \implies c = \gamma - 1
+              \qquad
+              \Ev(D^k) = (\gamma - 1) \int_1^\infty y^k y^{- \gamma} \odif{y} = (\gamma - 1) \frac{1}{\gamma - k - 1}
+          $$
+    \item Apply linearity of expectation:
+          $$
+              \Ev(\deg(v_i)) = 2 p_{ii} + \sum_{v_i \ne v_j \in V} p_{ij} = d_i \ab( 2 \frac{d_i}{2 w} + \sum_{v_i \ne v_j} \frac{d_j}{w} ) = d_i \frac{\sum_j d_j}{w} = d_i
+          $$
+    \item A simple algorithm is to create \emph{stubs} for each edge.
+          Each vertex gets $d_i$ source stubs, and $d_i$ target stubs, and then a simple permutation (with no fixed points) suffices to match them together.
+          It is well-known that $1/e$ proportion of such permutations are valid de-rangements, so rejection-sampling is efficient.
+\end{enumerate}
+
+\section{Centrality Measures}
+
+This section addresses the question of detecting influential \emph{nodes} in a network.
+We assign an influence score to each node, and then a typical pipeline proceeds by ranking them.
+Indeed, as several methods are expensive on very large graphs, filtering by only collecting nodes in the $k$-core (i.e. maximal subgraph with min-degree at least $k$) is often performed ($k = 2$ usually).
+It is also useful to describe the distribution of centrality.
+A histogram or a survival curve is good, and the centralization $\max c(v) - \Ev(c(v))$ is also used.
+
+For simplicity, the measures presented here are not normalized (cf. exercises).
+We note that it is desirable for measures to have unit L1-norm, as well as between $[0, 1]$ to be interpretable across networks.
+
+Our first set of measures are based on the adjacency matrix $A$, or potential normalized $\hat{A}$ with (column) sum $1$, where $A_{ij} = 1 \set{i \to j \in E}$ and are enumerated in Table \ref{tab:central-adj}.
+These measure influence primarily via their ego-net.
+
+\begin{table}[ht]
+    \begin{center}
+        \begin{tabular}{ccc}
+            Measure               & Formula                                  & Notes                             \\
+            \hline
+            \hline
+            Degree $\dagger$      & $A \vb{1}_n$                             & BA is based on degree centrality. \\
+            Eigenvector $\dagger$ & $(I - A)^{-1} \vb{0}_n$                  & Perron eigenvector is unique.     \\
+            Authority             & $(I - \alpha \beta A A^T)^{-1} \vb{0}_n$ & Center of incoming influence.     \\
+            Hub                   & $(I - \alpha \beta A^T A)^{-1} \vb{0}_n$ & Point to authorities.             \\
+            Katz                  & $(I - \alpha A^T)^{-1} \vb{1}_n$         & Based on damped random walk.      \\
+            PageRank              & $(I - \alpha \hat{A}^T)^{-1} \vb{1}_n$   & Damped walk in stochastic matrix. \\
+            \hline
+        \end{tabular}
+    \end{center}
+    \caption{ \textbf{Adjacency matrix based centrality measures}. See text for additional details. $\dagger$ indicates undirected graphs. }
+    \label{tab:central-adj}
+\end{table}
+
+Of course, it is straightforward to generalize degree and eigenvector centrality, although their interpretation may be less clear.
+Authority and hub centrality are solutions to the following mutual recurrence $ \vb{x} = \alpha A^T \vb{y} $, and $ \vb{y} = \beta A \vb{x}$, and are not necessarily unique, but must correspond to the (same) principal eigenvalue.
+PageRank and Katz centrality measure the occupancy of a node according to a random walk, e.g. $\vb{1}_n^T \sum_{k=1}^\infty (\alpha A)^k = (I - \alpha A^T)^{-1} \vb{1}$.
+Iterative numerical methods (related to power iteration) are useful here, especially for sparse matrices (e.g. Lanczos).
+
+Our next set of centrality measures are based instead on paths and distances (Table \ref{tab:central-dist}).
+Let $\Pi(i, j, k)$ be the set of shortest paths between $v_i$ and $v_j$ containing $v_k$, $\Pi(i, j) = \bigcup_k \ell(i, j, k)$, and $\ell(\cdot) = \abs{\Pi(\cdot)}$.
+\begin{table}[ht]
+    \begin{center}
+        \begin{tabular}{ccc}
+            Measure      & Formula                                              & Notes                                 \\
+            \hline
+            \hline
+            Closeness    & $\frac{1}{\sum_v d(u, v)}$                           & $d(u, u) = 0$ and $n$ if unreachable  \\
+            Harmonic     & $\sum_{v \ne u} \frac{1}{d(u, v)}$                   & More stable than closeness, typically \\
+            Eccentricity & $\frac{1}{\max_v d(u, v)}$                           & Related to diameter and radius        \\
+            Betweenness  & $\sum_{i, j \ne u} \frac{\ell(i, j, u)}{\ell(i, j)}$ & Influential nodes are congested.      \\
+            Efficiency   & $- \sum_{i, j \ne u} \frac{1}{d_{G - u}(i, j)}$      & Delta influence in the book.          \\
+            \hline
+        \end{tabular}
+    \end{center}
+    \caption{ \textbf{Path based centrality measures}. See text for additional details.}
+    \label{tab:central-dist}
+\end{table}
+
+Each of the measures considered here straightforward to extend to groups of nodes, e.g. \emph{communities}.
+They can help evaluate the overall organization of the network, as well as rank relative importance of various subsets of nodes.
+
+\subsection{Quick checks}
+
+\paragraph{Checks}
+
+\begin{enumerate}
+    \item Normalize each of the centrality measures between $[0, 1]$.
+    \item How might one describe the correlation between centrality measures?
+          What pairs have high or low correlations?
+    \item What is the computational cost for each of the centrality measures?
+\end{enumerate}
+
+\paragraph{Solutions}
+
+\begin{enumerate}
+    \item As eigenvector based measures are only defined up to scale, normalizing just requires picking a unit norm eigenvector.
+          Katz is already normalized and pagerank requires a $(1 - \alpha) / n$ factor.
+          Table \ref{tab:central-normalized} enumerates the normalization for the path based measures.
+          \begin{table}[ht]
+              \centering
+              \begin{tabular}{ccccc}
+                  Closeness                    & Harmonic                                & Eccentricity               & Betweenness                                                     & Efficiency                                                                         \\
+                  \hline
+                  \hline
+                  $\frac{n-1}{\sum_v d(u, v)}$ & $\sum_{v \ne u} \frac{1}{(n-1)d(u, v)}$ & $\frac{1}{\max_v d(u, v)}$ & $\sum_{i, j \ne u} \frac{(n-1)(n-2) \ell(i, j, u)}{\ell(i, j)}$ & $1 - \frac{\sum_{i, j \ne u} d_{G - u}(i, j)^{-1}}{\sum_{i, j} d_{G}(i, j)^{-1}} $ \\
+                  \hline
+              \end{tabular}
+              \caption{ \textbf{Normalized path based centrality measures}. }
+              \label{tab:central-normalized}
+          \end{table}
+    \item We plot the pairwise Kendall $\tau$ correlation between centrality measures on the restricted Airport dataset\footnotemark
+          \footnotetext{\url{https://www.kaggle.com/datasets/flashgordon/usa-airport-dataset}}.
+          This correlation measures the number of concordant pairs minus discordant pairs in the ranking, normalized between $0$ and $1$ by $\binom{n}{2}$.
+
+          The graph is disconnected, leading to $0$ variance of the eccentricity scoring and an undefined correlation between eccentricity and other measures.
+          Overall, we see each of the measures are correlated, with the strongest correlation being between Katz and degree, as well as harmonic and closeness centralities.
+          Moreover, the eigenvector centrality is similar to hub and authority.
+
+          \begin{figure}[ht]
+              \centering
+              \includegraphics[width=0.32\textwidth]{figs/centrality_mat.pdf}
+              \includegraphics[width=0.32\textwidth]{figs/centrality_dist.pdf}
+              \includegraphics[width=0.32\textwidth]{figs/centrality_correlation.pdf}
+              \caption{
+                  \textbf{Centrality on the California Airports dataset}.
+                  We show the distance and adjacency based centrality on a subset of the Airports dataset, restricted to within California flights.
+                  Adjacency based measures are on the weighted (directed) graph by passengers, with degree and eigvec on $A + A^T$ symmetric graph.
+                  Path based are on the unweighted undirected graph.
+                  Figures (a) and (b) have nodes ordered by degree centrality, and are normalized to unit L1-norm.
+                  Finally, we show the pairwise Kendall $\tau$ correlation in (c).
+              }
+          \end{figure}
+    \item The matrix based are cheap (often Lanczos iteration converges in constant number of steps), taking time proportional to $O(m)$.
+          The distance based ones are more expensive, with APSP taking $O(n^2 \log n + nm)$ time with Johnson's algorithm.
+          $k$-core pruning is useful, as well as probabilistic estimation (Monte Carlo) is good.
+\end{enumerate}
+
+\section{Community Detection}
+
+Community detection, as an unsupervised task, has many formulations.
+Finding a partition of our vertex set, with certain requirements, we can discuss a node's role, e.g. if we consider degree, then
+\begin{enumerate}
+    \item A node's participation is given by $p(v) = 1 - \sum_i \ab( \frac{\abs{N(v)} \cap C_i}{\abs{N(v)}} )^2$
+    \item A node's within-module $z$-score is given by $z(v) = \ab( \dint(v) - \mu(v) ) \sigma(v)^{-1}$.
+    \item The anomaly score is $\text{cd}(v) = \deg(v) / \dint(v)$.
+    \item The community association strength $\dint(v) / \deg(v) - \frac{\vol(C_i) - \deg(v)}{\vol(V)}$, normalized by Chung-Lu model.
+\end{enumerate}
+
+Community detection formulations argue about desirable cluster qualities.
+Section \ref{sec:cluster-axioms} has a modern characterization, but for now, traditionally, for a cluster $C$, we may consider the following three characterizations:
+\begin{itemize}
+    \item Weak community, where $\sum_{v \in C} \dint(v) \ge \sum_{v \in C} \dext(v)$
+    \item Strong community, where $\dint(v) \ge \dext(v) \forall v \in C$
+    \item Community, where $p^{\text{int}}(v) = \frac{\dint(v)}{\abs{C}} > \frac{\dext(v)}{\abs{V \setminus C}} = p^{\text{ext}}(v)$
+\end{itemize}
+
+As an unsupervised approach, there are several useful guiding questions to tailor your method of choice.
+How many clusters do we want, and what resolution are we studying?
+What are the desirable qualities in a clustering?
+Should clusters be overlapping?
+
+\subsection{Linkage}
+
+First, we sidestep the question of ``how many clusters'' by providing a view of many clusterings, for different scales.
+\begin{minipage}{0.55\textwidth}
+    In agglomerative clustering, we start with a singleton partition and merge pairs of clusters.
+    In divisive clustering, we start with a giant partition and split apart clusters.
+    Both are nicely visualized in a dendrogram, see for example the one on the right.
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+    \centering
+    \begin{tikzpicture}[
+            scale=0.6,
+            thick,
+            line width=1.4pt,
+            level distance=1.2cm,
+            sibling distance=2.4cm
+        ]
+
+        % --- dendrogram ---
+        \draw
+        (0,0) -- (0,1)
+        (0,1) -- (-2,1)
+        (0,1) -- (2,1)
+
+        (-2,1) -- (-2,2)
+        (-2,2) -- (-3,2)
+        (-2,2) -- (-1,2)
+
+        (2,1) -- (2,2)
+        (2,2) -- (1,2)
+        (2,2) -- (3,2);
+
+        % --- leaves ---
+        \node[below] at (-3,2) {$A$};
+        \node[below] at (-1,2) {$B$};
+        \node[below] at (1,2) {$C$};
+        \node[below] at (3,2) {$D$};
+
+        % --- cluster count cut lines ---
+        \draw[dotted, blue, very thick] (-4,0.5) -- (4,0.5);
+        \node[blue, right] at (4,0.5) {\small 1 clusters};
+
+        \draw[dotted, blue, very thick] (-4,1.5) -- (4,1.5);
+        \node[blue, right] at (4,1.5) {\small 2 clusters};
+
+        \draw[dotted, blue, very thick] (-4,2.5) -- (4,2.5);
+        \node[blue, right] at (4,2.5) {\small 4 clusters};
+    \end{tikzpicture}
+\end{minipage}
+
+The three typical strategies for agglomerative clustering, given a metric on our vertices, are:
+\begin{enumerate}
+    \item Single-linkage, where cluster distance is the minimum distance between points
+    \item Complete-linkage, where cluster distance is the maximum distance between points
+    \item Average-linkage, where cluster distance is the mean distance between points
+\end{enumerate}
+These tend to produce ``stringy'' and ``round'' clusters respectively, with average-linkage also usually round (in Euclidean space). % TODO: a figure might be nice
+For example, Rasvasz algorithm uses the following similarity function with average linkage:
+$$
+    s(v_i, v_j) = \frac{ \abs{N(v_i) \cap N(v_j)} + 1 \set{v_i v_j \in E} }{ \min( \deg(v_i), \deg(v_j) ) + 1 \set{v_i v_j \not \in E} }
+$$
+and Girvan-Newman is a divisive clustering algorithm, removing edges by an extension of betweenness for edges.
+
+\subsection{Modularity}
+\label{sec:modularity}
+
+Specializing our discussion of clustering to graphs, modularity is perhaps one of the most commonly used (despite its many flaws).
+It evaluates the quality of a clustering $\mathcal{C}$ by its improvement against the Chung-Lu null model,
+$$
+    q_G(\mathcal{C}) = \frac{1}{\abs{E}} \sum_{C_i \in \mathcal{C}} \Big[ \underbrace{\abs{E_G(C_i, C_i)}}_{\text{observed edges}} - \underbrace{\Ev_{G' \sim \mathcal{G}(\vb{d})} \abs{E_{G'}(C_i, C_i)}}_{\text{expected edges}} \Big] = \sum_{C_i \in \mathcal{C}} \Big[ \underbrace{\frac{\abs{E_G(C_i)}}{\abs{E}}}_{\text{edge contribution}} - \underbrace{\ab( \frac{\vol(C_i)}{\vol(V)} )^2}_{\text{degree tax}} \Big]
+$$
+Indeed, $q_G(C) \in [-0.5, 1]$, with $0$ being a singleton partition.
+It is NP-Hard to optimize, but there are many good heuristics.
+Namely, the Louvain algorithm iterates the following two stages:
+\begin{enumerate}
+    \item Stage 1: local node movement; in order of a random permutation, move $v$ to community maximizes $q_G(\mathcal{C}')$.
+    \item Stage 2: contract all communities into weighted (non-simple) graph, preserving degrees across components.
+\end{enumerate}
+As it is an unstable algorithm (meaning its performance varies widely with the permutation), it is an ideal candidate as a weak-learner.
+ECG \parencite{Poulin2019-ip} runs stage $1$ of Louvain $\ell$ times to find $\mathcal{C}_\ell$, forming weights
+$$
+    w(u, v) = \lambda + (1 - \lambda) 1 \set{uv \in 2-\text{core}} \Ev_{\mathcal{C}_{\ell}} (uv \in \mathcal{C}_\ell)
+$$
+with default values $\ell = 16$ and $\lambda = 0.05$.
+Finally, they run Louvain (repeating both stages) on the weighted graph to obtain their output clustering.
+Leiden is an improvement over Louvain, with a similar heuristic but enforcing well-connectedness of communities (Louvain may output disconnected communities).
+
+The biggest issue against modularity is its inductive bias against small clusters.
+Namely, the Chung-Lu model is non-local, so that for two communities $C_i$ and $C_j$, we expect $\vol(C_i) \vol(C_j) / \vol(G)$ edges.
+If both communities are smaller than $\sqrt{2 \abs{E}}$, then with even one edge between them, it is beneficial to merge\footnotemark.
+\footnotetext{The ring of cliques is a canonical example, where small cliques with just one edge between them get merged.}
+A simple patch is to add a resolution parameter $\gamma$, with the updated modularity function
+$$
+    q_G(\mathcal{C}, \gamma) = \sum_{C_i \in \mathcal{C}} \Big[ \frac{\abs{E_G(C_i)}}{\abs{E}} - \gamma \ab( \frac{\vol(C_i)}{\vol(V)} )^2 \Big]
+$$
+where communities maintain separated as long as the null proportion of edges $\le \gamma$ the empirical.
+Of course, there is now the issue of picking a $\gamma$, difficult to know \emph{a priori}.
+This is equivalent to adding a resistance to every node.
+
+\subsection{Other Methods}
+
+Now, we briefly examine a few other clustering algorithms.
+The most scalable approach, label propagation, repeatedly moves a node to the partition matching the most of its neighbors.
+Repeating for randomly selected nodes, it may not necessarily converge.
+
+Spectral clustering is $k$-means clustering via the RBF kernel.
+We seek $k$ components minimizing the RatioCut:
+$$
+    \mathcal{L}(S_1, \ldots, S_k) = \sum_{k=1}^K \frac{1}{\abs{S_k}} A(S_k, \bar{S}_k) = \sum_{k=1}^K \frac{1}{\abs{S_k}} \sum_{x \in S_k, y \not \in S_k} A_{xy}
+$$
+We can formulate an approximation to the NP-Hard optimization via the graph Laplacian $L = KK^T$, for $K \in \R^{n \times m}$ the (weighted) incidence matrix.
+Let $H \in \R^{n \times k}$, $H_{ij} = \frac{1}{\sqrt{\abs{S_j}}} 1\set{i \in S_j}$ be a (weighted) assignment, so $ \mathcal{L}(S_1, \ldots, S_k) = \Tr(H^TLH) $.
+Indeed, $H$ is orthogonal (normalized by construction).
+For any $f \in \R^n$,
+$$
+    \norm{K^T f}_2^2 = \sum_e (\sum_v k_{v, e} f_v)^2 = \sum_{uv \in E} \ab( \sqrt{A_{uv}} (f_u - f_v) )^2 = \frac{1}{2} \sum_{u, v \in V} A_{uv} (f_u - f_v)^2
+$$
+With $\abs{h_{ix} - h_{iy}} = \frac{1}{\sqrt{\abs{S_i}}} \abs{1\set{x \in S_i} - 1\set{y \in S_i}} = \frac{1}{\sqrt{\abs{S_i}}}1\set{\text{exactly one in } S_i}$, then letting $f = h$:
+$$
+    \Tr(H^T L H) = \norm{K^T H}_F^2 = \sum_{i=1}^k \norm{K^T \vb{h}_i}_2^2 = \sum_{i=1}^k \frac{1}{\abs{S_i}} \sum_{(x, y) \in (S_i, \bar{S}_i)} A_{xy} = \mathcal{L}(S_1, \ldots, S_k)
+$$
+Our (exact) problem seeks an orthonormal $H$ with discrete entries minimizing this trace.
+Relaxing $H$ with entries in $\R$, our problem is now $\min_{H^T H = I_k} \Tr(H^T L H)$, which by Courant-Fisher are the $k$ smallest eigenvectors of $L$
+
+Infomap makes no sense to me.
+TODO: come back later.
+
+\subsection{Benchmarks}
+\label{sec:benchmarks}
+
+Evaluating a clustering algorithm for \emph{accuracy} requires a set of benchmarks with a ground-truth clustering.
+Hence, there is a need to generate synthetic networks with a ground truth clustering\footnotemark.
+\footnotetext{Ground-truth on empirical networks are sketchy. See, e.g. \textcite{Peel2017-gg}.}
+Similarity functions on the contingency tables are useful, e.g. normalized/adjusted mutual information or adjusted rand index (concordant pairs).
+
+The Stochastic Block Model extends ER with communities.
+With communities $C_i$ of size $n_i$, we specify intra/inter-community edge probabilities $p_{ii}$ and $p_{ij}$.
+In the planted partition model, $p_{ij} = p \delta_{ij} + q (1 - \delta_{ij})$.
+
+The LFR model focuses specifically on recreating power-law graphs, with $\gamma$ and $\tau$ the community and degree Zipf parameters, as well as $\mu$ the fraction of inter-community \emph{neighbors}.
+The original proposed model is clunky to specify exactly, and not-scalable.
+Thus, the ABCD model improves on it, with $\gamma, \tau, \xi$ parameters, with $\xi$ the fraction of inter-community \text{edges}.
+It is a union of $\ell$ communities (of sizes according to $\text{Zipf}(\gamma)$), with degrees by $(1 - \xi) \text{Zipf}(\tau)$, and a background graph with the inter-community edges.
+ABCD+o extension allows for non-clustered outliers.
+
+\subsection{Quick Checks}
+
+\paragraph{Checks}
+
+\begin{enumerate}
+    \item Are all weak communities strong communities, or vice versa?
+          What about the third characterization?
+    \item How long would an algorithm that checks every partition take?
+\end{enumerate}
+
+\paragraph{Solutions}
+
+\begin{enumerate}
+    \item Strong communities are also weak.
+          Weak communities are not necessarily strong.
+          There are communities (defined by the proportion of edges) that are weak communities, as well as ones that aren't.
+    \item The number of partitions of $\arange{n}$ is known as the Bell number, with
+          $$
+              B_{n} = \sum_{k=0}^n \binom{n-1}{k} B_k = \ab( \frac{n}{(e + o(1)) \ln n} )^n
+          $$
+          and grows super-exponentially. Indeed, $B_{15} \approx 1.4 \times 10^9$ (OEIS sequence \#\href{https://oeis.org/A000110}{A000110}).
+\end{enumerate}
+
+\section{Node Embeddings}
+
+Another way of trying to obtain useful structural information is by embedding it into Euclidean space, either for reconstruction purposes, visualization, or to apply Machine learning algorithms (e.g. $k$-means, or deep learning).
+For example, if our embedding puts two nodes close together, we may expect a missing link to be a false negative.
+Formally, we seek $\mathcal{E}: V \to \R^k$, preserving some measure of proximity, e.g.
+\begin{itemize}
+    \item Adjacency (1st order proximity), or $k$-th order proximity the cosine distance of $k$-neighbors
+    \item Katz index $\sum_{i=1}^\infty (\alpha A)^i = (I / \alpha - A)^{-1} A$, and personalized PageRank $(1 - \alpha) (I - \alpha \hat{A}^T)^{-1}$
+    \item Adamic-Adar, a measure of volume of common neighbors $s(u, v) = \sum_{w \in N(u) \cap N(v)} \ab( \ln \deg(w) )^{-1}$
+\end{itemize}
+
+\subsection{Linear Embeddings}
+
+Let $E \in \R^{k \times n}$ be an embedding, mapping each node to a (column) vector of dimension $k \ll n$.
+We constrain $E$ to be zero-mean and orthogonal.
+Local linear embedding argues $E$ should be similar for neighbors, thus optimizes
+$$
+    \Phi_{\text{LLE}}(E) = \norm{ (I - \hat{A})E^T }_F = \Tr( E (I - \hat{A})^T (I - \hat{A}) E^T )
+$$
+Here, $E^*$ are the $2$nd to $(k+1)$-th minimal eigenvectors (ignoring $\vb{1}_n$ of eigenvalue 0) of $(I - \hat{A})^T (I - \hat{A})$.
+Note that isometries preserve $\Phi$.
+Very related is $\Phi_{\text{LEM}} = \Tr( ELE^T )$, for $L$ Laplacian, or $\Phi(E)_{\text{HOPE}} = \norm{ S - E_s^T E_t }_F$, for source and target embeddings respectively, and $S$ similarity.
+
+\subsection{Nonlinear Embeddings}
+
+Decoder-encoder networks $D, E$ increase the expressivity of linear embeddings, e.g. optimizing
+$$
+    \Phi_{\text{SDNE}}(E) = \sum_i \norm{ (a_i - D(E(a_i))B_i }^2 + \alpha \Tr(E L E^T) + L_{\text{reg}}
+$$
+for $B_i$ (diagonal) vertex weights.
+Another set of embeddings are based on the \emph{distribution hypothesis}.
+Recall that Word2Vec finds an embedding by treating each row as logits for appearing as a neighbor and optimizing MLE.
+Node2Vec creates ``sentences'' by running a random walk (DFS or BFS) and applying the Word2Vec procedure.
+
+Finally, we mention an emerging field of structural embeddings, which encode data beyond adjacency.
+Indeed, in the ReFeX procedure, given a set of initial structural features $\idx{\vb{f}_i}{0}$ for $v_i$,
+$$
+    \underbrace{\idx{\vb{h}_i}{k+1} \gets g( \set{ \idx{\vb{f}_j}{k} : v_j \in N(v_i) }}_{\text{Aggregate}},
+    \qquad
+    \underbrace{\idx{\vb{f}_i}{k+1} \gets \Pi_k \idx{\vb{h}_i}{k+1}}_{\text{Prune}}
+$$
+In particular, Graph Convolution Network, or the more scalable GraphSAGE (extension via sampling), runs
+$$
+    \idx{e}{s+1} = \sigma( \tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} \idx{e}{s} \idx{W}{s} )
+$$
+where $\sigma$ activation and $\idx{W}{s}$ (trained) set of weights.
+This can be semi-supervised, classifying unlabeled nodes.
+
+\subsection{Quick Checks}
+
+\paragraph{Checks}
+
+\begin{enumerate}
+    \item Typically, our formulation of embedding supervised or unsupervised?
+          Compare to spectral $k$-means.
+    \item What is the vocabulary space of Node2Vec?
+          What is its size relative to English?
+    \item How might one evaluate an embedding algorithm?
+\end{enumerate}
+
+\paragraph{Solutions}
+
+\begin{enumerate}
+    \item Our description of recovering a proximity score is unsupervised.
+          Spectral $k$-means clusters on the node-embedding of LEM (when normalized).
+    \item The vocabulary space is each node, which can be millions or billions.
+          Compare to English with thousands of words.
+          DeepWalk addresses scalability with hierarchical softmax and Node2Vec implements negative sampling.
+    \item \textcite{Kaminski2019-aj} propose using the Geometric Chung-Lu model, parameterized by degree distribution and node embeddings.
+          Good embeddings reconstruct edges of $G$, (compare Hosmer-Lemeshow).
+\end{enumerate}
+
+\part{Appendix}
+
+This part has content and derivations that are supplementary or illustrative to the content from book.
+Much of it is from external readings, but many take inspiration from the material.
+
+\section{Techniques for Random Graphs}
+
+\subsection{ER-Graphs: connectivity and motifs}
+\label{sec:er}
+
+We consider the ER process $\ER_t$, seeking to understanding the behavior of the components as $t \to \infty$.
+The main tool here will be Doob's Optional Stopping Theorem.
+Fix $t$, and $v \in \ER_t$, and consider running BFS starting from $v$, letting $A_k$ be the size of our queue, i.e. $A_0 = 1$.
+Then, the size of the components is $\tau_A \coloneq \min_{k} (A_k = 0) $.
+We shall show\footnotemark that 1. $\Ev(\tau_A) \le \frac{1}{1 - c}$ when $c < 1$, and 2. $\Pr{\tau_A \ge \epsilon n} > \delta$ for $\epsilon$ satisfying $1 - \epsilon > e^{-c\epsilon}$, $\delta > 0$.
+\footnotetext{In fact, both of these hold asymptotically almost-surely.}
+
+Suppose $\mean{k} = c < 1$, i.e. $p = \frac{c}{n-1}$.
+The number of adjacent neighbors is binomial distributed, in particular,
+$$
+    A_{k+1} = A_k + \BinomialD(n - k - A_k, p) - 1
+$$
+As we shall see, $t$ and $A_t$ are both small, so it suffices to bound it by $ B_{k+1} = A_{k+1} + \sum_{j=0}^k Y_k $ where $Y_k \sim \BinomialD(k + A_k - 1, p) $.
+That is, we have the recurrence $B_{k+1} = B_k + \BinomialD(n - 1, p) - 1$.
+As $B_k \ge A_k$, then we bound $\tau_A \le \tau_B \coloneq \min_{k} (B_k = 0) $.
+Since $\Ev( \BinomialD(n - 1, p) ) = (n-1)p = c$, then by optionally stopping,
+$$
+    1 = \Ev( B_0 ) = \Ev( B_{\tau_B} + \tau_B(1 - c) ) = 0 + (1 - c) \Ev(\tau_B) \implies \Ev(\tau_B) = \frac{1}{1 - c}
+$$
+Thus, for $\mean{k} < 1$, then each component is of constant size in expectation.
+Otherwise, supposing $\mean{k} > 1$, then we can apply similar argument with $Z_k \sim \BinomialD((n \epsilon - A_k - k), p)$, consider $C_{k+1} = A_{k+1} - \sum_{j=0}^k Z_k$ satisfying $C_{k+1} = C_k + \BinomialD(n(1 - \epsilon), p)$.
+By standard results in random walks, as long as $\Ev(Z_k) - 1 > 0$, then with positive probability $\tau_C \ge k$.
+Indeed, this holds for $\epsilon < 1 - c^{-1}$.
+Further, with complementary counting, $\BinomialD(n - k - A_k, p) \sim \BinomialD(n - k, (1-p)^k)$, so we can moreover bound $\epsilon$ satisfying $1 - \epsilon - e^{- c \epsilon} > 0$.
+
+Next, we can also discuss the probability of containing a motif, in terms of the maximum subgraph density.
+Indeed, recall the Second-Moment Method, where for $X \ge 0$, we can bound the probability of $X$ being zero as
+$$
+    \Pr{X = 0} \le \Pr{ \abs{X - \Ev(x)} \ge \Ev(X) } \le \frac{\Var(X)}{\Ev(X)^2}
+$$
+Let $X$ be the number occurrences of $H$, with $h_v$ and $h_e$ vertices and edges, appearing as a subgraph in $\ER(n, p)$:
+$$
+    \Ev(X) = \frac{1}{\mathbf{aut}(H)} \sum_{v_1,\ldots,v_h \in V} 1\set{H \subset \ER[v_1, \ldots, v_h]} \propto n^{h_v} p^{h_e}
+$$
+Indeed, if $np^{-1/m(H)} \to 0$, then so does $\Ev(X)$ and $\Pr{X > 0}$.
+Conversely, if $np^{-1/m(H)} \to \infty$, then we can bound the variance by writing $X = \sum X_k$ where $X_k$ indicates that a permutation of $h_v$ vertices contains $H$:
+$$
+    \Var(X) = \sum_k \Var(X_k) + \sum_{i \not \sim j} \cancel{\Cov(X_i, X_j)} + \sum_{i \sim j, i \ne j} \Cov(X_i, X_j) = O(n^{2n - h_v} p^{2m - h_e})
+$$
+with $i \sim j \iff X_i \not \indep X_j$, i.e. they share $\ge 2$ vertices.
+Thus, $\frac{\Var(X)}{\Ev(X)^2} \to 0$, $\Pr{X > 0} \ge 1 - \frac{\Var(X)}{\Ev(X)^2} \to 1$.
+
+\subsection{BA-Graphs: power-law distribution}
+\label{sec:ba}
+
+We briefly mention a more precise derivation of the degree distribution of a BA graph.
+This is based on the \emph{rate equation}, where if we consider $N(k, t)$ the number of nodes of degree $k$ at a time $t$, with $p_k(t) = \frac{N(k, t)}{t}$, then
+$$
+    \Ev( \text{edges added to } N(k, t) \text{ per additional vertex} ) = m \frac{k}{2mt} N(k, t) = \frac{k}{2} p_k(t)
+$$
+Thus, we get the following difference equation
+$$
+    N(k, t+1) = N(k, t) + \underbrace{\frac{k-1}{2} p_{k-1}(t)}_{\text{promoting from degree } k-1} - \underbrace{\frac{k}{2} p_k(t)}_{\text{promoting to degree } k + 1}
+$$
+with initial condition $p_k = 0$ for $k < m$.
+For large $t$, then $p_k(t)$ is stationary, and so
+$$
+    N(k, t+1) - N(k, t) = p_k = \frac{-1}{2} \ab( k p_k - (k-1) p_{k-1} )
+$$
+Now, solving this recurrence with one's favorite method, we find that
+$$
+    p_k = \frac{2m(m+1)}{k(k+1)(k+2)}
+$$
+which is very similar to our continuum approximation.
+Indeed, approximate $k p_k - (k-1) p_{k-1} = \odv{(kp_k)}{k}$, then we arrive back at the standard continuum equation (after product rule).
+
+\subsection{Regular-Graphs: number of cycles}
+
+For $R_n$ the uniform distribution of $2$-regular graphs on $n$ vertices, we show that the number of cycles $Y_n$ is concentrated near $\frac{\ln n}{2}$.
+Consider the following procedure (resembling DFS) for generating a $d$-regular graph:
+\begin{enumerate}
+    \item Start at a source stub, and pair it with a target.
+    \item Repeat step 1 from a source stub from the chosen paired vertex, or a uniform one if there are no remaining sources.
+\end{enumerate}
+There are $2n$ steps and thus $n$ steps of the algorithm.
+Let $p_k$ be the probability of step $k$ closing a loop, so that $\Ev(Y_n) = \sum_{k=1}^n p_k$.
+Let $s_k$ be the source vertex of the (unique) path at the $k$-th step.
+Finally,
+$$
+    p_k = \frac{\# \text{target stubs of } s_k}{\# \text{target stubs remaining} } = \frac{1}{2(n-(k-1)) - 1}
+$$
+Thus we find our desired results:
+\begin{align*}
+    \Ev(Y_n) & = \sum_{k=1}^n \frac{1}{2(n-k) + 1} = \sum_{j=1}^{2n} \frac{1}{j} - \sum_{j=1}^n \frac{1}{2j}                                            \\
+             & = (\ln 2n + \gamma) - \frac{\ln n + \gamma}{2} + o(1) = \frac{\ln n}{2} + \ln 2 + \frac{\gamma}{2} + o(1) \approx \frac{\ln n}{2} + 1.27
+\end{align*}
+and with Chernoff bounds, for each $X_k \in \set{0, 1}$ independent, then for any $0 < \delta < 1$, then\footnotemark
+$$
+    \Pr{Y_n \ge (1 + \sqrt{3} \delta) \Ev(Y_n)  } \le \exp{- \delta^2 \Ev(Y_n) } \le n^{-\delta^2 / 2} \to 0
+$$
+\footnotetext{The specific form I used is given by Lemma 13.2.5 in \url{https://sarielhp.org/p/notes/16/chernoff/cheat_sheet.pdf}}
+\vspace{-2\baselineskip}
+
+\subsection{Clustering Unweighted Graphs}
+\label{sec:cluster-axioms}
+
+We paraphrase the axioms a clustering algorithm $\mathcal{A}$ should satisfy, based on \textcite{Willson2024-wv}:
+\begin{enumerate}
+    \item Richness: $\forall \mathcal{C}$ clustering of $\arange{n}$, $\exists E$ s.t. $\mathcal{A}(V, E) = \mathcal{C}$
+    \item Consistency\footnotemark: $E'$ removes inter-cluster/adds intra-cluster edges, $\mathcal{A}(V, E')$ refines $\mathcal{A}(V, E')$.
+    \item Connectivity: $\exists f: \R^+ \to \R^+$ unbounded and non-decreasing s.t. min-cut of all $C \in \mathcal{C}$ exceeds $f(\abs{C})$.
+    \item Fixed point: applying $\mathcal{A}$ to any induced subgraph by clusters would return same clusters.
+    \item Pair-of-cliques: $\exists n_0$ such that two cliques $K_{n_0}$ connected by edge are distinct clusters.
+\end{enumerate}
+\footnotetext{Standard consistency refines for strict equality of clusterings, but is unintuitive, e.g. a ring lattice.}
+
+\clearpage
+\printbibliography
+
+\end{document}
