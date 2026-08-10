@@ -16,15 +16,18 @@ main:
 
   - title: "Teaching"
     url: /teaching/    
-
-  - title: "Resume"
-    url: /files/resume.pdf    
     
   - title: "Blog Posts"
-    url: /year-archive/
+    url: /blog/
 
   - title: "Notes"
     url: /notes/
+
+  - title: "Resume"
+    url: /files/resume.pdf    
+
+  - title: "CV"
+    url: /files/Ian_Chen_CV.pdf    
 
   # - title: "Portfolio"
   #   url: /portfolio/

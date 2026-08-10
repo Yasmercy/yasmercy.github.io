@@ -10,7 +10,9 @@ location: "Urbana, IL, USA"
 
 Write-ups and presentations for a reading group I am doing with [Srujan Roplekar](https://srujanr2.github.io/) this summer.
 
-## What's the big deal with Expanders? (Part 2); July 14th, 2026
+<!-- ## Fast Linear Solvers; July 19th, 2026 -->
+
+<!-- ## What's the big deal with Expanders? (Part 2); July 12th, 2026 -->
 
 ## Lower Bounds and Impossibility Results; July 5th, 2026
 
