@@ -8,7 +8,16 @@ date: 2026-05-31
 location: "Urbana, IL, USA"
 ---
 
-Write-ups and presentations for a reading group I am doing with [Srujan Roplekar](https://srujanr2.github.io/) this summer.
+# Schedule for Readings with Kyle Enkzhul and Tai Nguyen
+
+[Schedule](https://docs.google.com/spreadsheets/d/1QBAPXNKPZR_qJm9-nG-dXG29AknlLf7pCjgb90VlTsE/edit?usp=sharing)
+
+[06-15 Presentation](/files/posts/2026-summer-reading/kyle-tai/06-15.pdf)
+[06-24 Presentation](/files/posts/2026-summer-reading/kyle-tai/06-24.pdf)
+[07-01 Presentation](/files/posts/2026-summer-reading/kyle-tai/07-01.pdf)
+[07-15 Presentation](/files/posts/2026-summer-reading/kyle-tai/07-15.pdf)
+
+# Write-ups and presentations Reading with [Srujan Roplekar](https://srujanr2.github.io/)
 
 <!-- ## Fast Linear Solvers; July 19th, 2026 -->
 
